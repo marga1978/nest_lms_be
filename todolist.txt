@@ -1,0 +1,3 @@
+- verificare in tutte le chiamate transazioni
+- inserire relazioni multiple join per capire
+- capire se si possono chiamare stored procedure

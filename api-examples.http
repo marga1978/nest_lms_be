@@ -1,0 +1,295 @@
+# Esempi di richieste HTTP per testare l'API
+# Puoi usare questi esempi con tools come Postman, Insomnia, o REST Client per VS Code
+
+### STUDENTI ###
+
+# Crea uno studente
+POST http://localhost:3000/students
+Content-Type: application/json
+
+{
+  "firstName": "Mario",
+  "lastName": "Rossi",
+  "email": "mario.rossi@example.com",
+  "dateOfBirth": "2000-01-15"
+}
+
+###
+
+# Crea un altro studente
+POST http://localhost:3000/students
+Content-Type: application/json
+
+{
+  "firstName": "Giulia",
+  "lastName": "Verdi",
+  "email": "giulia.verdi@example.com",
+  "dateOfBirth": "1999-08-22"
+}
+
+###
+
+# Ottieni tutti gli studenti
+GET http://localhost:3000/students
+
+###
+
+# Ottieni uno studente specifico
+GET http://localhost:3000/students/1
+
+###
+
+# Aggiorna uno studente
+PATCH http://localhost:3000/students/1
+Content-Type: application/json
+
+{
+  "firstName": "Mario Giuseppe"
+}
+
+###
+
+# Disattiva uno studente
+PATCH http://localhost:3000/students/1
+Content-Type: application/json
+
+{
+  "isActive": false
+}
+
+###
+
+# Elimina uno studente
+DELETE http://localhost:3000/students/1
+
+###
+
+### CORSI ###
+
+# Crea un corso
+POST http://localhost:3000/courses
+Content-Type: application/json
+
+{
+  "name": "Programmazione Web",
+  "description": "Corso completo di sviluppo web con tecnologie moderne",
+  "code": "WEB101",
+  "credits": 6,
+  "maxStudents": 30
+}
+
+###
+
+# Crea un altro corso
+POST http://localhost:3000/courses
+Content-Type: application/json
+
+{
+  "name": "Database Avanzati",
+  "description": "Approfondimento su database relazionali e NoSQL",
+  "code": "DB201",
+  "credits": 9,
+  "maxStudents": 25
+}
+
+###
+
+# Crea un terzo corso
+POST http://localhost:3000/courses
+Content-Type: application/json
+
+{
+  "name": "Intelligenza Artificiale",
+  "description": "Introduzione al machine learning e AI",
+  "code": "AI301",
+  "credits": 12,
+  "maxStudents": 20
+}
+
+###
+
+# Ottieni tutti i corsi
+GET http://localhost:3000/courses
+
+###
+
+# Ottieni un corso specifico
+GET http://localhost:3000/courses/1
+
+###
+
+# Aggiorna un corso
+PATCH http://localhost:3000/courses/1
+Content-Type: application/json
+
+{
+  "maxStudents": 35
+}
+
+###
+
+# Disattiva un corso
+PATCH http://localhost:3000/courses/1
+Content-Type: application/json
+
+{
+  "isActive": false
+}
+
+###
+
+# Elimina un corso
+DELETE http://localhost:3000/courses/1
+
+###
+
+### ISCRIZIONI (CON TRANSAZIONI) ###
+
+# Iscrivi uno studente a un corso
+POST http://localhost:3000/enrollments
+Content-Type: application/json
+
+{
+  "studentId": 1,
+  "courseId": 1
+}
+
+###
+
+# Iscrivi uno studente a più corsi in una singola transazione
+POST http://localhost:3000/enrollments/bulk
+Content-Type: application/json
+
+{
+  "studentId": 1,
+  "courseIds": [1, 2, 3]
+}
+
+###
+
+# Ottieni tutte le iscrizioni
+GET http://localhost:3000/enrollments
+
+###
+
+# Ottieni un'iscrizione specifica
+GET http://localhost:3000/enrollments/1
+
+###
+
+# Ottieni tutte le iscrizioni di uno studente
+GET http://localhost:3000/enrollments?studentId=1
+
+###
+
+# Ottieni tutte le iscrizioni di un corso
+GET http://localhost:3000/enrollments?courseId=1
+
+###
+
+# Aggiorna lo stato di un'iscrizione
+PATCH http://localhost:3000/enrollments/1
+Content-Type: application/json
+
+{
+  "status": "active"
+}
+
+###
+
+# Aggiungi un voto a un'iscrizione
+PATCH http://localhost:3000/enrollments/1
+Content-Type: application/json
+
+{
+  "status": "completed",
+  "grade": 28.5
+}
+
+###
+
+# Cancella un'iscrizione
+PATCH http://localhost:3000/enrollments/1
+Content-Type: application/json
+
+{
+  "status": "cancelled"
+}
+
+###
+
+# Elimina un'iscrizione
+DELETE http://localhost:3000/enrollments/1
+
+###
+
+### SCENARI DI TEST PER LE TRANSAZIONI ###
+
+# Test 1: Prova a iscrivere uno studente a un corso inesistente
+# (La transazione dovrebbe fare rollback)
+POST http://localhost:3000/enrollments
+Content-Type: application/json
+
+{
+  "studentId": 1,
+  "courseId": 999
+}
+
+###
+
+# Test 2: Prova a iscrivere uno studente già iscritto
+# (La transazione dovrebbe rilevare il duplicato)
+POST http://localhost:3000/enrollments
+Content-Type: application/json
+
+{
+  "studentId": 1,
+  "courseId": 1
+}
+
+###
+
+# Test 3: Prova a iscrivere uno studente quando il corso è pieno
+# Prima crea un corso con maxStudents=1
+POST http://localhost:3000/courses
+Content-Type: application/json
+
+{
+  "name": "Corso Test Pieno",
+  "description": "Corso per testare il limite studenti",
+  "code": "TEST01",
+  "credits": 3,
+  "maxStudents": 1
+}
+
+# Poi iscrivi il primo studente (dovrebbe funzionare)
+POST http://localhost:3000/enrollments
+Content-Type: application/json
+
+{
+  "studentId": 1,
+  "courseId": 4
+}
+
+# Infine prova a iscrivere un secondo studente (dovrebbe fallire)
+POST http://localhost:3000/enrollments
+Content-Type: application/json
+
+{
+  "studentId": 2,
+  "courseId": 4
+}
+
+###
+
+# Test 4: Iscrizione multipla con uno dei corsi inesistente
+# (Tutta la transazione dovrebbe fare rollback, nessuna iscrizione creata)
+POST http://localhost:3000/enrollments/bulk
+Content-Type: application/json
+
+{
+  "studentId": 2,
+  "courseIds": [1, 2, 999]
+}
+
+###

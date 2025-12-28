@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: students_courses_db
+      MYSQL_DATABASE: db_lms
     ports:
       - "3307:3306"
     volumes:

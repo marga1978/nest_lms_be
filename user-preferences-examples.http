@@ -1,0 +1,244 @@
+### User Preferences API Examples
+### Usa questo file con REST Client (VS Code Extension) o copia i comandi per Postman
+
+### ========================================
+### 1. CREATE - Crea preferenze per un utente
+### ========================================
+POST http://localhost:3000/user-preferences
+Content-Type: application/json
+
+{
+  "user_id": "1",
+  "ui_settings": {
+    "theme": "dark",
+    "language": "it",
+    "notifications_enabled": true,
+    "playback_speed": 1.5
+  },
+  "learning_preferences": {
+    "favorite_topics": ["javascript", "database"],
+    "completed_courses": [],
+    "bookmarks": []
+  },
+  "accessibility": {
+    "subtitles_default": true,
+    "high_contrast": false
+  }
+}
+
+### ========================================
+### 2. GET ALL - Ottieni tutte le preferenze (admin)
+### ========================================
+GET http://localhost:3000/user-preferences
+
+### ========================================
+### 3. GET BY USER ID - Ottieni preferenze per user_id
+### ========================================
+GET http://localhost:3000/user-preferences/1
+
+### ========================================
+### 4. UPDATE - Aggiorna preferenze complete
+### ========================================
+PUT http://localhost:3000/user-preferences/1
+Content-Type: application/json
+
+{
+  "ui_settings": {
+    "theme": "light",
+    "language": "en",
+    "notifications_enabled": false,
+    "playback_speed": 2.0
+  },
+  "accessibility": {
+    "subtitles_default": false,
+    "high_contrast": true
+  }
+}
+
+### ========================================
+### 5. PATCH UI SETTINGS - Aggiorna solo UI settings
+### ========================================
+PATCH http://localhost:3000/user-preferences/1/ui-settings
+Content-Type: application/json
+
+{
+  "theme": "dark",
+  "playback_speed": 1.0
+}
+
+### ========================================
+### 6. PATCH ACCESSIBILITY - Aggiorna solo accessibility
+### ========================================
+PATCH http://localhost:3000/user-preferences/1/accessibility
+Content-Type: application/json
+
+{
+  "subtitles_default": true,
+  "high_contrast": false
+}
+
+### ========================================
+### 7. ADD BOOKMARK - Aggiungi un bookmark
+### ========================================
+POST http://localhost:3000/user-preferences/1/bookmarks
+Content-Type: application/json
+
+{
+  "course_id": "course_123",
+  "lesson_id": "lesson_456"
+}
+
+### ========================================
+### 8. ADD ANOTHER BOOKMARK
+### ========================================
+POST http://localhost:3000/user-preferences/1/bookmarks
+Content-Type: application/json
+
+{
+  "course_id": "course_789",
+  "lesson_id": "lesson_101"
+}
+
+### ========================================
+### 9. DELETE BOOKMARK - Rimuovi un bookmark
+### ========================================
+DELETE http://localhost:3000/user-preferences/1/bookmarks/course_123/lesson_456
+
+### ========================================
+### 10. ADD FAVORITE TOPIC - Aggiungi topic preferito
+### ========================================
+POST http://localhost:3000/user-preferences/1/favorite-topics
+Content-Type: application/json
+
+{
+  "topic": "nestjs"
+}
+
+### ========================================
+### 11. ADD ANOTHER FAVORITE TOPIC
+### ========================================
+POST http://localhost:3000/user-preferences/1/favorite-topics
+Content-Type: application/json
+
+{
+  "topic": "typescript"
+}
+
+### ========================================
+### 12. DELETE FAVORITE TOPIC - Rimuovi topic preferito
+### ========================================
+DELETE http://localhost:3000/user-preferences/1/favorite-topics/javascript
+
+### ========================================
+### 13. MARK COURSE COMPLETED - Marca corso come completato
+### ========================================
+POST http://localhost:3000/user-preferences/1/completed-courses
+Content-Type: application/json
+
+{
+  "course_id": "course_123"
+}
+
+### ========================================
+### 14. MARK ANOTHER COURSE COMPLETED
+### ========================================
+POST http://localhost:3000/user-preferences/1/completed-courses
+Content-Type: application/json
+
+{
+  "course_id": "course_789"
+}
+
+### ========================================
+### 15. UNMARK COURSE COMPLETED - Rimuovi corso dai completati
+### ========================================
+DELETE http://localhost:3000/user-preferences/1/completed-courses/course_123
+
+### ========================================
+### 16. DELETE - Elimina preferenze per user_id
+### ========================================
+DELETE http://localhost:3000/user-preferences/1
+
+### ========================================
+### TEST SEQUENCE - Sequenza completa di test
+### ========================================
+
+### Step 1: Crea preferenze per user "1"
+POST http://localhost:3000/user-preferences
+Content-Type: application/json
+
+{
+  "user_id": "1",
+  "ui_settings": {
+    "theme": "dark",
+    "language": "it",
+    "notifications_enabled": true,
+    "playback_speed": 1.5
+  },
+  "learning_preferences": {
+    "favorite_topics": ["javascript", "database"],
+    "completed_courses": [],
+    "bookmarks": []
+  },
+  "accessibility": {
+    "subtitles_default": true,
+    "high_contrast": false
+  }
+}
+
+### Step 2: Aggiungi bookmarks
+POST http://localhost:3000/user-preferences/1/bookmarks
+Content-Type: application/json
+
+{
+  "course_id": "course_nestjs_101",
+  "lesson_id": "lesson_intro"
+}
+
+### Step 3: Aggiungi topic preferito
+POST http://localhost:3000/user-preferences/1/favorite-topics
+Content-Type: application/json
+
+{
+  "topic": "nestjs"
+}
+
+### Step 4: Marca corso completato
+POST http://localhost:3000/user-preferences/1/completed-courses
+Content-Type: application/json
+
+{
+  "course_id": "course_js_fundamentals"
+}
+
+### Step 5: Verifica le preferenze
+GET http://localhost:3000/user-preferences/1
+
+### ========================================
+### ERROR CASES - Test gestione errori
+### ========================================
+
+### Test 404: User non esistente
+GET http://localhost:3000/user-preferences/999
+
+### Test 409: Duplicato (user_id già esistente)
+POST http://localhost:3000/user-preferences
+Content-Type: application/json
+
+{
+  "user_id": "1",
+  "ui_settings": {
+    "theme": "light"
+  }
+}
+
+### Test 400: Validazione fallita (playback_speed troppo alto)
+POST http://localhost:3000/user-preferences
+Content-Type: application/json
+
+{
+  "user_id": "2",
+  "ui_settings": {
+    "playback_speed": 5.0
+  }
+}

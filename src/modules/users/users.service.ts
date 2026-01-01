@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, QueryFailedError } from 'typeorm';
 import { User } from '../../entities/user.entity';
 import { CreateUserDto, UpdateUserDto } from '../../dto/user.dto';
 
@@ -12,8 +12,35 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const user = this.usersRepository.create(createUserDto);
-    return await this.usersRepository.save(user);
+    try {
+      const user = this.usersRepository.create(createUserDto);
+      return await this.usersRepository.save(user);
+    } catch (error) {
+      // Gestione errore duplicato (MySQL error code 1062 o ER_DUP_ENTRY)
+      if (error instanceof QueryFailedError) {
+        const mysqlError = error as any;
+        if (mysqlError.code === 'ER_DUP_ENTRY' || mysqlError.errno === 1062) {
+          // Estrai il campo duplicato dal messaggio di errore
+          const match = mysqlError.sqlMessage?.match(/Duplicate entry '(.+?)' for key '(.+?)'/);
+          if (match) {
+            const duplicateValue = match[1];
+            const keyName = match[2];
+
+            // Determina quale campo è duplicato
+            if (keyName.includes('email') || keyName.includes('IDX_97672ac88f789774dd47f7c8be')) {
+              throw new ConflictException(`Email "${duplicateValue}" già registrata`);
+            } else if (keyName.includes('username')) {
+              throw new ConflictException(`Username "${duplicateValue}" già in uso`);
+            } else {
+              throw new ConflictException('Utente già esistente con questi dati');
+            }
+          }
+          throw new ConflictException('Utente già esistente');
+        }
+      }
+      // Rilancia altri errori
+      throw error;
+    }
   }
 
   async findAll(): Promise<User[]> {

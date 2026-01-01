@@ -1402,3 +1402,318 @@ Progetto educativo per dimostrare l'implementazione di relazioni database con Ne
 ---
 
 **⭐ Se questo progetto ti è stato utile, considera di lasciare una stella su GitHub!**
+
+## 📋 Sistema di Logging con Winston
+
+Il progetto implementa un sistema di logging avanzato utilizzando **Winston** per tracciare tutte le richieste HTTP e gli errori dell'applicazione.
+
+### 🎯 Caratteristiche del Sistema di Logging
+
+- ✅ **Logging automatico di tutte le richieste HTTP**
+- ✅ **Separazione dei log per livello** (info, warn, error, http)
+- ✅ **Formato JSON strutturato** con ordine consistente dei campi
+- ✅ **Sanitizzazione automatica** dei dati sensibili (password, token, apiKey)
+- ✅ **Stack trace completo** per errori e warning
+- ✅ **Response time tracking** per ogni richiesta
+- ✅ **Logging di body, params e query** delle richieste
+
+### 📁 Struttura dei File di Log
+
+Tutti i log sono salvati nella directory `logs/`:
+
+```
+logs/
+├── combined.log    # Tutti i log (info + warn + error + http)
+├── info.log        # Solo log di livello INFO (status 200-299)
+├── warn.log        # Solo log di livello WARN (status 400-499)
+├── error.log       # Solo log di livello ERROR (status 500+)
+└── http.log        # Solo log di livello HTTP (status 300-399)
+```
+
+### 🎨 Formato dei Log
+
+I log sono in formato JSON con campi ordinati per massima leggibilità:
+
+```json
+{
+  "timestamp": "2025-12-28 19:27:52",
+  "level": "warn",
+  "message": "HTTP Client Error",
+  "statusCode": 404,
+  "method": "GET",
+  "url": "/users/999",
+  "responseTime": "11ms",
+  "ip": "::1",
+  "error": "Utente con ID 999 non trovato",
+  "stack": "NotFoundException: Utente con ID 999 non trovato\n    at UsersService.findOne (...)"
+}
+```
+
+### 📊 Mapping Livelli di Log
+
+Il sistema assegna automaticamente i livelli di log in base allo status code HTTP:
+
+| Status Code | Livello | File Log | Descrizione |
+|-------------|---------|----------|-------------|
+| 200-299 | `info` | info.log | Richieste completate con successo |
+| 300-399 | `http` | http.log | Redirect e risposte informative |
+| 400-499 | `warn` | warn.log | Errori client (bad request, not found, conflict, etc.) |
+| 500+ | `error` | error.log | Errori server interni |
+
+### 🔒 Sicurezza - Sanitizzazione Dati Sensibili
+
+Le password e altri dati sensibili vengono automaticamente mascherati nei log:
+
+**Campi sanitizzati:**
+- `password` → `***REDACTED***`
+- `token` → `***REDACTED***`
+- `apiKey` → `***REDACTED***`
+- `secret` → `***REDACTED***`
+- `authorization` → `***REDACTED***`
+
+**Esempio:**
+```json
+{
+  "body": {
+    "email": "user@example.com",
+    "username": "testuser",
+    "password": "***REDACTED***"
+  }
+}
+```
+
+### 📝 Ordine dei Campi nei Log
+
+I campi sono ordinati per importanza per facilitare la lettura:
+
+1. `timestamp` - Data e ora dell'evento
+2. `level` - Livello del log (info, warn, error, http)
+3. `message` - Messaggio descrittivo
+4. `statusCode` - Codice HTTP (se presente)
+5. `method` - Metodo HTTP (GET, POST, etc.)
+6. `url` - URL della richiesta
+7. `responseTime` - Tempo di risposta
+8. `ip` - Indirizzo IP del client
+9. `userAgent` - User agent del client
+10. `error` - Messaggio di errore (solo per warn/error)
+11. `params` - Parametri URL (es. `:id`)
+12. `query` - Query string
+13. `body` - Body della richiesta (POST/PATCH)
+14. `stack` - Stack trace (solo per warn/error)
+
+### 🛠️ Come Visualizzare i Log
+
+#### Metodo 1: Visualizzazione Diretta (Tutti i Log)
+```bash
+# Visualizza tutti i log combinati
+cat logs/combined.log
+
+# Visualizza solo log di errore
+cat logs/error.log
+
+# Visualizza solo log di warning
+cat logs/warn.log
+
+# Visualizza solo log HTTP (redirect)
+cat logs/http.log
+
+# Segui i log in tempo reale
+tail -f logs/combined.log
+```
+
+#### Metodo 2: Con `jq` (JSON Pretty Print)
+```bash
+# Installa jq (se non già installato)
+brew install jq  # macOS
+# oppure
+sudo apt-get install jq  # Linux
+
+# Visualizza log formattati
+cat logs/combined.log | jq .
+
+# Filtra solo errori 500+
+cat logs/combined.log | jq 'select(.statusCode >= 500)'
+
+# Filtra per metodo HTTP
+cat logs/combined.log | jq 'select(.method == "POST")'
+
+# Filtra per URL specifica
+cat logs/combined.log | jq 'select(.url | contains("/users"))'
+
+# Mostra solo timestamp, level e message
+cat logs/combined.log | jq '{timestamp, level, message, statusCode}'
+```
+
+#### Metodo 3: Con Python (Per Analisi Più Complesse)
+```bash
+# Script Python per leggere e filtrare log
+python3 << 'EOF'
+import json
+
+with open('logs/combined.log', 'r') as f:
+    for line in f:
+        try:
+            log = json.loads(line)
+            # Filtra per status code
+            if log.get('statusCode', 0) >= 400:
+                print(f"{log['timestamp']} - {log['level'].upper()} - {log['method']} {log['url']} - {log.get('error', 'N/A')}")
+        except json.JSONDecodeError:
+            pass
+EOF
+```
+
+### 🧪 Testare i Livelli di Log
+
+#### Test Log INFO (200-299)
+```bash
+# GET richiesta che restituisce 200
+curl http://localhost:3000/users
+
+# POST richiesta che restituisce 201
+curl -X POST http://localhost:3000/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test.user@example.com",
+    "username": "testuser",
+    "password": "password123"
+  }'
+
+# Verifica in info.log
+tail -1 logs/info.log | jq .
+```
+
+#### Test Log HTTP (300-399)
+```bash
+# Endpoint di test per redirect (302)
+curl -I http://localhost:3000/users/redirect-test
+
+# Verifica in http.log
+tail -1 logs/http.log | jq .
+```
+
+#### Test Log WARN (400-499)
+```bash
+# Test 404 - Not Found
+curl http://localhost:3000/users/999
+
+# Test 400 - Bad Request
+curl -X POST http://localhost:3000/users \
+  -H "Content-Type: application/json" \
+  -d '{"bad": "data"}'
+
+# Test 409 - Conflict (email duplicata)
+curl -X POST http://localhost:3000/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "existing@example.com",
+    "username": "test",
+    "password": "password123"
+  }'
+
+# Verifica in warn.log
+tail -3 logs/warn.log | jq .
+```
+
+#### Test Log ERROR (500+)
+Gli errori 500+ vengono generati automaticamente in caso di problemi del server (es. database down, errori di codice non gestiti).
+
+```bash
+# Verifica errori server
+cat logs/error.log | jq .
+```
+
+### 📖 Esempi di Log Reali
+
+#### Esempio: Richiesta GET Completata (INFO)
+```json
+{
+  "timestamp": "2025-12-28 19:10:00",
+  "level": "info",
+  "message": "HTTP Request Completed",
+  "statusCode": 200,
+  "method": "GET",
+  "url": "/users",
+  "responseTime": "12ms",
+  "ip": "::1"
+}
+```
+
+#### Esempio: Errore 404 - Not Found (WARN)
+```json
+{
+  "timestamp": "2025-12-28 19:27:52",
+  "level": "warn",
+  "message": "HTTP Client Error",
+  "statusCode": 404,
+  "method": "GET",
+  "url": "/users/999",
+  "responseTime": "11ms",
+  "ip": "::1",
+  "error": "Utente con ID 999 non trovato",
+  "stack": "NotFoundException: Utente con ID 999 non trovato\n    at UsersService.findOne (/Users/.../users.service.ts:59:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)"
+}
+```
+
+#### Esempio: Errore 409 - Conflict (WARN)
+```json
+{
+  "timestamp": "2025-12-28 19:27:52",
+  "level": "warn",
+  "message": "HTTP Client Error",
+  "statusCode": 409,
+  "method": "POST",
+  "url": "/users",
+  "responseTime": "21ms",
+  "ip": "::1",
+  "error": "Email \"test@example.com\" già registrata",
+  "body": {
+    "email": "test@example.com",
+    "username": "test",
+    "password": "***REDACTED***"
+  },
+  "stack": "ConflictException: Email \"test@example.com\" già registrata\n    at UsersService.create (/Users/.../users.service.ts:31:21)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)"
+}
+```
+
+#### Esempio: Redirect 302 (HTTP)
+```json
+{
+  "timestamp": "2025-12-28 19:29:22",
+  "level": "http",
+  "message": "HTTP Request Redirected",
+  "statusCode": 302,
+  "method": "GET",
+  "url": "/users/redirect-test",
+  "responseTime": "3ms",
+  "ip": "::1"
+}
+```
+
+### ⚙️ Configurazione
+
+Il sistema di logging è configurato in:
+- [src/config/winston.config.ts](src/config/winston.config.ts) - Configurazione Winston
+- [src/interceptors/http-logger.interceptor.ts](src/interceptors/http-logger.interceptor.ts) - Interceptor per logging HTTP
+- [src/main.ts](src/main.ts#L14) - Registrazione globale dell'interceptor
+
+### 🔧 Personalizzazione
+
+Per modificare il comportamento del logging:
+
+1. **Cambiare il formato dei log**: Modifica `orderedJson` in [winston.config.ts](src/config/winston.config.ts)
+2. **Aggiungere campi sanitizzati**: Modifica `sensitiveFields` in [http-logger.interceptor.ts](src/interceptors/http-logger.interceptor.ts#L75)
+3. **Modificare il mapping dei livelli**: Modifica la logica in [http-logger.interceptor.ts](src/interceptors/http-logger.interceptor.ts#L36-L62)
+
+### 🚀 Best Practices
+
+1. **Monitora i log regolarmente**: Usa `tail -f logs/combined.log` durante lo sviluppo
+2. **Analizza gli errori**: Controlla `logs/error.log` e `logs/warn.log` periodicamente
+3. **Ruota i log in produzione**: Implementa log rotation per evitare file troppo grandi
+4. **Non loggare dati sensibili**: Il sistema già sanitizza le password, ma verifica altri campi sensibili
+5. **Usa i filtri jq**: Per analisi rapide e debugging specifico
+
+### 📚 Riferimenti
+
+- **Winston Documentation**: https://github.com/winstonjs/winston
+- **NestJS Logging**: https://docs.nestjs.com/techniques/logger
+- **jq Manual**: https://stedolan.github.io/jq/manual/

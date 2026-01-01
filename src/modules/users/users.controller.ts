@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, HttpCode, HttpStatus, Redirect } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto } from '../../dto/user.dto';
 
@@ -14,6 +14,14 @@ export class UsersController {
   @Get()
   findAll() {
     return this.usersService.findAll();
+  }
+
+  @Get('redirect-test')
+  @HttpCode(302)
+  redirectTest() {
+    // Questo endpoint genera un log HTTP (redirect 3xx)
+    // Simula un redirect restituendo un oggetto
+    return { message: 'Redirect simulation', redirectTo: 'https://www.google.com' };
   }
 
   @Get(':id')

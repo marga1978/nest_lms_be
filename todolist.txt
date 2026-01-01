@@ -1,3 +1,5 @@
+- capire come usare jq per query da file log
 - verificare in tutte le chiamate transazioni
+- gestione degli errori
 - inserire relazioni multiple join per capire
 - capire se si possono chiamare stored procedure

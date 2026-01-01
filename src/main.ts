@@ -1,10 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { HttpLoggerInterceptor } from './interceptors/http-logger.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // Abilita la validazione globale
   app.useGlobalPipes(
     new ValidationPipe({
@@ -13,6 +14,9 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // Abilita il logging HTTP globale
+  app.useGlobalInterceptors(new HttpLoggerInterceptor());
 
   // Abilita CORS se necessario
   app.enableCors();

@@ -1,14 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Course } from '../../entities/course.entity';
-import { CreateCourseDto, UpdateCourseDto } from '../../dto/course.dto';
+import { CourseLesson } from '../../entities/course-lesson.entity';
+import { CreateCourseDto, UpdateCourseDto, CreateCourseWithLessonsDto } from '../../dto/course.dto';
 
 @Injectable()
 export class CoursesService {
   constructor(
     @InjectRepository(Course)
     private coursesRepository: Repository<Course>,
+    @InjectRepository(CourseLesson)
+    private courseLessonsRepository: Repository<CourseLesson>,
+    private dataSource: DataSource,
   ) {}
 
   async create(createCourseDto: CreateCourseDto): Promise<Course> {
@@ -44,5 +48,40 @@ export class CoursesService {
   async remove(id: number): Promise<void> {
     const course = await this.findOne(id);
     await this.coursesRepository.remove(course);
+  }
+
+  async createWithLessons(createCourseWithLessonsDto: CreateCourseWithLessonsDto): Promise<Course> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 1. Crea il corso
+      const course = this.coursesRepository.create(createCourseWithLessonsDto.course);
+      const savedCourse = await queryRunner.manager.save(course);
+
+      // 2. Crea le lezioni associate al corso
+      const lessons = createCourseWithLessonsDto.lessons.map((lessonDto) => {
+        return this.courseLessonsRepository.create({
+          ...lessonDto,
+          courseId: savedCourse.id,
+        });
+      });
+
+      await queryRunner.manager.save(lessons);
+
+      // 3. Commit della transazione
+      await queryRunner.commitTransaction();
+
+      // 4. Ritorna il corso con le lezioni
+      return await this.findOne(savedCourse.id);
+    } catch (error) {
+      // Rollback in caso di errore
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      // Rilascia il query runner
+      await queryRunner.release();
+    }
   }
 }

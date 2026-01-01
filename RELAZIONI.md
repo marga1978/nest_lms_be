@@ -466,6 +466,126 @@ Risposta:
 - `maxStudents` *(opzionale)* - Numero massimo di studenti (default: 30)
 - `isActive` *(opzionale)* - Stato del corso (default: true)
 
+#### 0.1. Creare un Corso con Lezioni in un'Unica Chiamata ⭐ (CONSIGLIATO)
+> **Nuovo!** Questa API permette di creare un corso e tutte le sue lezioni in un'unica chiamata transazionale.
+
+```http
+POST http://localhost:3000/courses/with-lessons
+Content-Type: application/json
+
+{
+  "course": {
+    "name": "Vue.js Masterclass",
+    "description": "Corso completo su Vue.js 3 con Composition API",
+    "code": "VUE301",
+    "credits": 8,
+    "maxStudents": 25,
+    "isActive": true
+  },
+  "lessons": [
+    {
+      "title": "Introduzione a Vue.js",
+      "description": "Panoramica su Vue.js e setup dell'ambiente",
+      "type": "video",
+      "videoUrl": "https://example.com/vue-intro.mp4",
+      "orderIndex": 1,
+      "durationMinutes": 30
+    },
+    {
+      "title": "Reactive Data con Vue 3",
+      "description": "Approfondimento su ref, reactive e computed",
+      "type": "video",
+      "videoUrl": "https://example.com/vue-reactive.mp4",
+      "orderIndex": 2,
+      "durationMinutes": 45
+    },
+    {
+      "title": "Vue Router",
+      "description": "Navigazione e routing in Vue.js",
+      "type": "video",
+      "videoUrl": "https://example.com/vue-router.mp4",
+      "orderIndex": 3,
+      "durationMinutes": 40
+    }
+  ]
+}
+```
+
+Risposta:
+```json
+{
+  "id": 6,
+  "name": "Vue.js Masterclass",
+  "description": "Corso completo su Vue.js 3 con Composition API",
+  "code": "VUE301",
+  "credits": 8,
+  "maxStudents": 25,
+  "isActive": true,
+  "createdAt": "2026-01-01T20:43:53.026Z",
+  "updatedAt": "2026-01-01T20:43:53.026Z",
+  "enrollments": [],
+  "lessons": [
+    {
+      "id": 4,
+      "courseId": 6,
+      "title": "Introduzione a Vue.js",
+      "description": "Panoramica su Vue.js e setup dell'ambiente",
+      "type": "video",
+      "content": null,
+      "videoUrl": "https://example.com/vue-intro.mp4",
+      "orderIndex": 1,
+      "durationMinutes": 30,
+      "isActive": true,
+      "createdAt": "2026-01-01T20:43:53.036Z",
+      "updatedAt": "2026-01-01T20:43:53.036Z"
+    },
+    {
+      "id": 5,
+      "courseId": 6,
+      "title": "Reactive Data con Vue 3",
+      "description": "Approfondimento su ref, reactive e computed",
+      "type": "video",
+      "content": null,
+      "videoUrl": "https://example.com/vue-reactive.mp4",
+      "orderIndex": 2,
+      "durationMinutes": 45,
+      "isActive": true,
+      "createdAt": "2026-01-01T20:43:53.047Z",
+      "updatedAt": "2026-01-01T20:43:53.047Z"
+    },
+    {
+      "id": 6,
+      "courseId": 6,
+      "title": "Vue Router",
+      "description": "Navigazione e routing in Vue.js",
+      "type": "video",
+      "content": null,
+      "videoUrl": "https://example.com/vue-router.mp4",
+      "orderIndex": 3,
+      "durationMinutes": 40,
+      "isActive": true,
+      "createdAt": "2026-01-01T20:43:53.051Z",
+      "updatedAt": "2026-01-01T20:43:53.051Z"
+    }
+  ]
+}
+```
+
+**Vantaggi di questa API:**
+- ✅ **Atomicità**: Transazione unica - se una lezione fallisce, viene fatto rollback di tutto
+- ✅ **Performance**: Una sola chiamata HTTP invece di N+1 chiamate
+- ✅ **Semplicità**: Creazione completa del corso in un solo passo
+- ✅ **Consistenza**: Garantisce che il corso abbia sempre le sue lezioni
+
+**Quando usarla:**
+- Setup iniziale di un nuovo corso con tutte le lezioni
+- Importazione massiva di corsi da altri sistemi
+- Quando si conosce già la struttura completa del corso
+
+**Quando NON usarla:**
+- Per aggiungere lezioni a un corso esistente (usa `POST /course-lessons`)
+- Per creare solo il corso senza lezioni (usa `POST /courses`)
+
 #### 1. Creare Lezioni per un Corso
 ```http
 POST http://localhost:3000/course-lessons
@@ -1557,6 +1677,7 @@ GET http://localhost:3000/user-preferences/1
 
 ### Courses
 - `POST /courses` - Crea corso
+- `POST /courses/with-lessons` - ⭐ Crea corso con lezioni in un'unica transazione (CONSIGLIATO)
 - `GET /courses` - Lista tutti i corsi (con enrollments e lessons)
 - `GET /courses/:id` - Dettaglio corso (con enrollments e lessons)
 - `PATCH /courses/:id` - Aggiorna corso

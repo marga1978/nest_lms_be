@@ -821,7 +821,7 @@ Risposta:
 
 #### 3. Ottenere Tutte le Iscrizioni di un Utente
 ```http
-GET http://localhost:3000/enrollments?userId=1
+GET http://localhost:3000/enrollments/user/1
 ```
 
 Risposta:
@@ -853,7 +853,7 @@ Risposta:
 
 #### 4. Ottenere Tutti gli Iscritti a un Corso
 ```http
-GET http://localhost:3000/enrollments?courseId=1
+GET http://localhost:3000/enrollments/course/1
 ```
 
 Risposta:
@@ -1019,8 +1019,8 @@ Risposta: **`204 No Content`** (nessun body nella risposta)
 - `POST /enrollments` - Crea iscrizione singola
 - `POST /enrollments/bulk` - Iscrizione multipla (un utente a più corsi)
 - `GET /enrollments` - Lista tutte le iscrizioni
-- `GET /enrollments?userId=X` - Iscrizioni filtrate per utente
-- `GET /enrollments?courseId=X` - Iscrizioni filtrate per corso
+- `GET /enrollments/user/:userId` - Iscrizioni filtrate per utente
+- `GET /enrollments/course/:courseId` - Iscrizioni filtrate per corso
 - `GET /enrollments/:id` - Dettaglio iscrizione
 - `PATCH /enrollments/:id` - Aggiorna iscrizione (status, grade)
 - `DELETE /enrollments/:id` - Elimina iscrizione

@@ -20,7 +20,6 @@ services:
 
   mongodb:
     image: mongo:6.0
-  mongodb_data:
     container_name: nestjs-mongodb-lms
     restart: unless-stopped
     ports:

@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { MongooseModule } from '@nestjs/mongoose';
 import { CoursesModule } from './modules/courses/courses.module';
 import { EnrollmentsModule } from './modules/enrollments/enrollments.module';
 import { UsersModule } from './modules/users/users.module';
 import { UserProfilesModule } from './modules/user-profiles/user-profiles.module';
 import { CourseLessonsModule } from './modules/course-lessons/course-lessons.module';
+import { UserPreferencesModule } from './modules/user-preferences/user-preferences.module';
 import { Course } from './entities/course.entity';
 import { Enrollment } from './entities/enrollment.entity';
 import { User } from './entities/user.entity';
@@ -18,6 +20,7 @@ import { CourseLesson } from './entities/course-lesson.entity';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    // MySQL Database (TypeORM)
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: process.env.DB_HOST || 'localhost',
@@ -29,11 +32,15 @@ import { CourseLesson } from './entities/course-lesson.entity';
       synchronize: true, // In produzione usa migrations!
       logging: true,
     }),
+    // MongoDB Database (Mongoose)
+    MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/db_lms'),
+    // Feature Modules
     UsersModule,
     CoursesModule,
     EnrollmentsModule,
     UserProfilesModule,
     CourseLessonsModule,
+    UserPreferencesModule,
   ],
 })
 export class AppModule {}

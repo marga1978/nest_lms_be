@@ -1,15 +1,24 @@
-# Sistema di Gestione Utenti e Corsi - NestJS + MySQL + Docker
+# Sistema di Gestione Utenti e Corsi - NestJS + MySQL + MongoDB + Docker
 
-Sistema completo per la gestione di utenti, corsi, profili e iscrizioni con NestJS, TypeORM e MySQL in Docker.
+Sistema completo per la gestione di utenti, corsi, profili e iscrizioni con **architettura ibrida**:
+- **MySQL (TypeORM)** per dati relazionali (utenti, corsi, iscrizioni)
+- **MongoDB (Mongoose)** per preferenze utente (schema flessibile)
 
 ## 🚀 Caratteristiche
 
 ### Gestione Entità
+
+#### MySQL (Dati Relazionali)
 - ✅ Gestione completa di **Utenti** (credenziali: email, username, password)
 - ✅ Gestione completa di **Corsi** con lezioni
 - ✅ Sistema di **Iscrizioni** con tabella di raccordo (M:N)
 - ✅ **User Profiles** (relazione 1:1 con Users - dati personali separati)
 - ✅ **Course Lessons** (relazione 1:N con Courses)
+
+#### MongoDB (Dati Non-Relazionali)
+- ✅ **User Preferences** (preferenze UI, apprendimento, accessibilità)
+- ✅ Schema flessibile per dati che cambiano frequentemente
+- ✅ Bookmarks, favorite topics, corsi completati
 
 ### Relazioni Database
 
@@ -93,14 +102,57 @@ User (N) ←→ (N) Course
                          └──────────────────┘
 ```
 
+### 🔗 User Preferences in MongoDB (Schema Flessibile)
+**Preferenze utente separate dal profilo relazionale**
+
+Il sistema utilizza MongoDB per memorizzare le preferenze utente, che cambiano frequentemente e non richiedono relazioni rigide:
+
+```
+UserPreferences (MongoDB)
+├── _id: ObjectId
+├── user_id: "1" (riferimento a MySQL users.id)
+├── ui_settings
+│   ├── theme: "dark"
+│   ├── language: "it"
+│   ├── notifications_enabled: true
+│   └── playback_speed: 1.5
+├── learning_preferences
+│   ├── favorite_topics: ["javascript", "nestjs"]
+│   ├── completed_courses: ["course_123"]
+│   └── bookmarks: [{course_id, lesson_id, timestamp}]
+├── accessibility
+│   ├── subtitles_default: true
+│   └── high_contrast: false
+├── created_at: ISODate
+└── updated_at: ISODate
+```
+
+**Vantaggi dell'architettura ibrida:**
+- ✅ Dati relazionali (utenti, corsi) in MySQL per integrità referenziale
+- ✅ Preferenze utente in MongoDB per flessibilità e performance
+- ✅ `user_id` come chiave di collegamento tra MySQL e MongoDB
+- ✅ Schema MongoDB modificabile senza migrazioni
+
 ### Funzionalità Avanzate
+
+#### MySQL (TypeORM)
 - ✅ **Transazioni** per garantire l'integrità dei dati
 - ✅ Validazione automatica dei dati con class-validator
 - ✅ Controllo numero massimo studenti per corso
 - ✅ Iscrizioni multiple in una singola transazione (bulk enrollment)
 - ✅ Supporto a 4 tipi di lezioni: video, text, quiz, assignment
 - ✅ Stati iscrizione: pending, active, completed, cancelled
-- ✅ Docker Compose per ambiente di sviluppo isolato
+
+#### MongoDB (Mongoose)
+- ✅ **Schema flessibile** per preferenze utente
+- ✅ Operazioni atomiche con `$push`, `$pull`, `$addToSet`
+- ✅ Indice unico su `user_id` per garantire unicità
+- ✅ Timestamps automatici (created_at, updated_at)
+- ✅ Validazione con class-validator sui DTOs
+
+#### Infrastruttura
+- ✅ Docker Compose per ambiente di sviluppo isolato (MySQL + MongoDB)
+- ✅ Architettura ibrida MySQL + MongoDB
 
 ## 📋 Prerequisiti
 
@@ -119,22 +171,30 @@ User (N) ←→ (N) Course
 npm install
 ```
 
-3. **Avvia il database MySQL con Docker Compose**
+3. **Avvia i database con Docker Compose**
 ```bash
 docker-compose up -d
 ```
 
-Questo avvierà MySQL 8.0 sulla porta **3307** (per evitare conflitti con installazioni locali).
+Questo avvierà:
+- **MySQL 8.0** sulla porta **3307** (dati relazionali)
+- **MongoDB 6.0** sulla porta **27017** (preferenze utente)
 
 4. **Configura le variabili d'ambiente**
 
 Il file `.env` è già configurato per Docker:
 ```env
+# MySQL Database Configuration
 DB_HOST=localhost
 DB_PORT=3307
 DB_USERNAME=root
 DB_PASSWORD=password
-DB_DATABASE=students_courses_db
+DB_DATABASE=db_lms
+
+# MongoDB Configuration
+MONGODB_URI=mongodb://localhost:27017/db_lms
+
+# Application Configuration
 PORT=3000
 ```
 
@@ -949,6 +1009,165 @@ DELETE /enrollments/:id
 **Risposta:** **`204 No Content`** (nessun body nella risposta)
 
 > **Nota**: Eliminare un'iscrizione non elimina né l'utente né il corso, solo il collegamento tra loro.
+
+### 🎨 User Preferences (MongoDB)
+
+#### Crea preferenze utente
+```http
+POST /user-preferences
+Content-Type: application/json
+
+{
+  "user_id": "1",
+  "ui_settings": {
+    "theme": "dark",
+    "language": "it",
+    "notifications_enabled": true,
+    "playback_speed": 1.5
+  },
+  "learning_preferences": {
+    "favorite_topics": ["javascript", "database"],
+    "completed_courses": [],
+    "bookmarks": []
+  },
+  "accessibility": {
+    "subtitles_default": true,
+    "high_contrast": false
+  }
+}
+```
+
+**Risposta:**
+```json
+{
+  "_id": "6956b5e1bf92005074e915d7",
+  "user_id": "1",
+  "ui_settings": {
+    "theme": "dark",
+    "language": "it",
+    "notifications_enabled": true,
+    "playback_speed": 1.5
+  },
+  "learning_preferences": {
+    "favorite_topics": ["javascript", "database"],
+    "completed_courses": [],
+    "bookmarks": []
+  },
+  "accessibility": {
+    "subtitles_default": true,
+    "high_contrast": false
+  },
+  "created_at": "2026-01-01T17:58:57.574Z",
+  "updated_at": "2026-01-01T17:58:57.574Z"
+}
+```
+
+#### Ottieni preferenze per user_id
+```http
+GET /user-preferences/:userId
+```
+
+**Esempio:**
+```bash
+curl http://localhost:3000/user-preferences/1
+```
+
+#### Aggiorna preferenze complete
+```http
+PUT /user-preferences/:userId
+Content-Type: application/json
+
+{
+  "ui_settings": {
+    "theme": "light",
+    "playback_speed": 2.0
+  }
+}
+```
+
+#### Aggiungi un bookmark
+```http
+POST /user-preferences/:userId/bookmarks
+Content-Type: application/json
+
+{
+  "course_id": "course_nestjs_101",
+  "lesson_id": "lesson_intro"
+}
+```
+
+**Risposta:** Preferenze aggiornate con bookmark e timestamp automatico
+
+#### Rimuovi un bookmark
+```http
+DELETE /user-preferences/:userId/bookmarks/:courseId/:lessonId
+```
+
+**Esempio:**
+```bash
+curl -X DELETE http://localhost:3000/user-preferences/1/bookmarks/course_nestjs_101/lesson_intro
+```
+
+#### Aggiungi topic preferito
+```http
+POST /user-preferences/:userId/favorite-topics
+Content-Type: application/json
+
+{
+  "topic": "nestjs"
+}
+```
+
+#### Rimuovi topic preferito
+```http
+DELETE /user-preferences/:userId/favorite-topics/:topic
+```
+
+#### Marca corso come completato
+```http
+POST /user-preferences/:userId/completed-courses
+Content-Type: application/json
+
+{
+  "course_id": "course_123"
+}
+```
+
+#### Rimuovi corso dai completati
+```http
+DELETE /user-preferences/:userId/completed-courses/:courseId
+```
+
+#### Aggiorna solo UI settings
+```http
+PATCH /user-preferences/:userId/ui-settings
+Content-Type: application/json
+
+{
+  "theme": "dark",
+  "playback_speed": 1.0
+}
+```
+
+#### Aggiorna solo accessibility
+```http
+PATCH /user-preferences/:userId/accessibility
+Content-Type: application/json
+
+{
+  "subtitles_default": true,
+  "high_contrast": false
+}
+```
+
+#### Elimina preferenze
+```http
+DELETE /user-preferences/:userId
+```
+
+**Risposta:** **`204 No Content`**
+
+> **Nota**: Le preferenze sono memorizzate in MongoDB con `user_id` come riferimento all'utente MySQL.
 
 ## 🔒 Transazioni Implementate
 

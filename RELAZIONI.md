@@ -1,12 +1,27 @@
 # Gestione delle Relazioni nel Sistema
 
-Questo documento fornisce una guida completa e dettagliata su come utilizzare le relazioni database implementate nel sistema: **1:1**, **1:N** e **M:N**.
+Questo documento fornisce una guida completa e dettagliata su come utilizzare le relazioni database implementate nel sistema.
+
+## 🏗️ Architettura Ibrida: MySQL + MongoDB
+
+Il sistema utilizza un'**architettura ibrida** con due database:
+
+### MySQL (TypeORM) - Dati Relazionali
+- **User** ↔ **UserProfile** (1:1)
+- **Course** → **CourseLessons** (1:N)
+- **User** ↔ **Course** tramite **Enrollments** (M:N)
+
+### MongoDB (Mongoose) - Dati Non-Relazionali
+- **UserPreferences** - Preferenze utente (UI, apprendimento, accessibilità)
+- Collegato a MySQL tramite `user_id` (riferimento a `users.id`)
+- Schema flessibile, senza relazioni rigide
 
 ## 📖 Indice
 - [Workflow Completo: Come Creare un Corso](#-workflow-completo-come-creare-un-corso)
-- [Relazione 1:1 - User ↔ UserProfile](#relazione-11---user--userprofile)
-- [Relazione 1:N - Course → CourseLessons](#relazione-1n---course--courselessons)
-- [Relazione M:N - User ↔ Course (tramite Enrollments)](#relazione-mn---user--course-tramite-enrollments)
+- [Relazione 1:1 - User ↔ UserProfile (MySQL)](#relazione-11---user--userprofile-mysql)
+- [Relazione 1:N - Course → CourseLessons (MySQL)](#relazione-1n---course--courselessons-mysql)
+- [Relazione M:N - User ↔ Course tramite Enrollments (MySQL)](#relazione-mn---user--course-tramite-enrollments-mysql)
+- [User Preferences (MongoDB)](#user-preferences-mongodb)
 - [Tipi di Lezione](#tipi-di-lezione)
 - [Endpoints Completi](#endpoints-completi)
 - [Validazioni e Controlli](#validazioni-e-controlli)
@@ -450,6 +465,126 @@ Risposta:
 - `credits` *(obbligatorio)* - Numero di crediti (valore numerico)
 - `maxStudents` *(opzionale)* - Numero massimo di studenti (default: 30)
 - `isActive` *(opzionale)* - Stato del corso (default: true)
+
+#### 0.1. Creare un Corso con Lezioni in un'Unica Chiamata ⭐ (CONSIGLIATO)
+> **Nuovo!** Questa API permette di creare un corso e tutte le sue lezioni in un'unica chiamata transazionale.
+
+```http
+POST http://localhost:3000/courses/with-lessons
+Content-Type: application/json
+
+{
+  "course": {
+    "name": "Vue.js Masterclass",
+    "description": "Corso completo su Vue.js 3 con Composition API",
+    "code": "VUE301",
+    "credits": 8,
+    "maxStudents": 25,
+    "isActive": true
+  },
+  "lessons": [
+    {
+      "title": "Introduzione a Vue.js",
+      "description": "Panoramica su Vue.js e setup dell'ambiente",
+      "type": "video",
+      "videoUrl": "https://example.com/vue-intro.mp4",
+      "orderIndex": 1,
+      "durationMinutes": 30
+    },
+    {
+      "title": "Reactive Data con Vue 3",
+      "description": "Approfondimento su ref, reactive e computed",
+      "type": "video",
+      "videoUrl": "https://example.com/vue-reactive.mp4",
+      "orderIndex": 2,
+      "durationMinutes": 45
+    },
+    {
+      "title": "Vue Router",
+      "description": "Navigazione e routing in Vue.js",
+      "type": "video",
+      "videoUrl": "https://example.com/vue-router.mp4",
+      "orderIndex": 3,
+      "durationMinutes": 40
+    }
+  ]
+}
+```
+
+Risposta:
+```json
+{
+  "id": 6,
+  "name": "Vue.js Masterclass",
+  "description": "Corso completo su Vue.js 3 con Composition API",
+  "code": "VUE301",
+  "credits": 8,
+  "maxStudents": 25,
+  "isActive": true,
+  "createdAt": "2026-01-01T20:43:53.026Z",
+  "updatedAt": "2026-01-01T20:43:53.026Z",
+  "enrollments": [],
+  "lessons": [
+    {
+      "id": 4,
+      "courseId": 6,
+      "title": "Introduzione a Vue.js",
+      "description": "Panoramica su Vue.js e setup dell'ambiente",
+      "type": "video",
+      "content": null,
+      "videoUrl": "https://example.com/vue-intro.mp4",
+      "orderIndex": 1,
+      "durationMinutes": 30,
+      "isActive": true,
+      "createdAt": "2026-01-01T20:43:53.036Z",
+      "updatedAt": "2026-01-01T20:43:53.036Z"
+    },
+    {
+      "id": 5,
+      "courseId": 6,
+      "title": "Reactive Data con Vue 3",
+      "description": "Approfondimento su ref, reactive e computed",
+      "type": "video",
+      "content": null,
+      "videoUrl": "https://example.com/vue-reactive.mp4",
+      "orderIndex": 2,
+      "durationMinutes": 45,
+      "isActive": true,
+      "createdAt": "2026-01-01T20:43:53.047Z",
+      "updatedAt": "2026-01-01T20:43:53.047Z"
+    },
+    {
+      "id": 6,
+      "courseId": 6,
+      "title": "Vue Router",
+      "description": "Navigazione e routing in Vue.js",
+      "type": "video",
+      "content": null,
+      "videoUrl": "https://example.com/vue-router.mp4",
+      "orderIndex": 3,
+      "durationMinutes": 40,
+      "isActive": true,
+      "createdAt": "2026-01-01T20:43:53.051Z",
+      "updatedAt": "2026-01-01T20:43:53.051Z"
+    }
+  ]
+}
+```
+
+**Vantaggi di questa API:**
+- ✅ **Atomicità**: Transazione unica - se una lezione fallisce, viene fatto rollback di tutto
+- ✅ **Performance**: Una sola chiamata HTTP invece di N+1 chiamate
+- ✅ **Semplicità**: Creazione completa del corso in un solo passo
+- ✅ **Consistenza**: Garantisce che il corso abbia sempre le sue lezioni
+
+**Quando usarla:**
+- Setup iniziale di un nuovo corso con tutte le lezioni
+- Importazione massiva di corsi da altri sistemi
+- Quando si conosce già la struttura completa del corso
+
+**Quando NON usarla:**
+- Per aggiungere lezioni a un corso esistente (usa `POST /course-lessons`)
+- Per creare solo il corso senza lezioni (usa `POST /courses`)
 
 #### 1. Creare Lezioni per un Corso
 ```http
@@ -943,6 +1078,546 @@ Risposta: **`204 No Content`** (nessun body nella risposta)
 
 ---
 
+## User Preferences (MongoDB)
+
+### Caratteristiche
+- **Database**: MongoDB (non MySQL)
+- **Collection**: `preferences_user`
+- **Collegamento**: Campo `user_id` (string) che fa riferimento a `users.id` di MySQL
+- **Schema flessibile**: Preferenze UI, apprendimento e accessibilità
+- **Operazioni atomiche**: Utilizzo di `$push`, `$pull`, `$addToSet` per array
+- **Timestamps automatici**: `created_at` e `updated_at`
+
+### Schema Documento MongoDB
+```javascript
+{
+  "_id": ObjectId("..."),
+  "user_id": "1",  // Riferimento a MySQL users.id
+  "ui_settings": {
+    "theme": "light",           // light, dark
+    "language": "it",           // it, en, fr, es
+    "notifications_enabled": true,
+    "playback_speed": 1.0       // 0.5, 1.0, 1.5, 2.0
+  },
+  "learning_preferences": {
+    "favorite_topics": ["JavaScript", "TypeScript", "NestJS"],
+    "completed_courses": ["1", "2", "5"],
+    "bookmarks": [
+      {
+        "course_id": "1",
+        "lesson_id": "3",
+        "timestamp": ISODate("2025-12-27T18:30:00.000Z")
+      }
+    ]
+  },
+  "accessibility": {
+    "subtitles_default": false,
+    "high_contrast": false
+  },
+  "created_at": ISODate("2025-12-27T18:00:00.000Z"),
+  "updated_at": ISODate("2025-12-27T18:00:00.000Z")
+}
+```
+
+### Esempi di Utilizzo
+
+#### 1. Creare Preferenze per un Utente
+```http
+POST http://localhost:3000/user-preferences
+Content-Type: application/json
+
+{
+  "user_id": "1",
+  "ui_settings": {
+    "theme": "dark",
+    "language": "it",
+    "notifications_enabled": true,
+    "playback_speed": 1.0
+  },
+  "learning_preferences": {
+    "favorite_topics": ["JavaScript"],
+    "completed_courses": [],
+    "bookmarks": []
+  },
+  "accessibility": {
+    "subtitles_default": false,
+    "high_contrast": false
+  }
+}
+```
+
+Risposta:
+```json
+{
+  "_id": "67a5f3c8e9b0d1234567890a",
+  "user_id": "1",
+  "ui_settings": {
+    "theme": "dark",
+    "language": "it",
+    "notifications_enabled": true,
+    "playback_speed": 1.0
+  },
+  "learning_preferences": {
+    "favorite_topics": ["JavaScript"],
+    "completed_courses": [],
+    "bookmarks": []
+  },
+  "accessibility": {
+    "subtitles_default": false,
+    "high_contrast": false
+  },
+  "created_at": "2025-12-27T18:00:00.000Z",
+  "updated_at": "2025-12-27T18:00:00.000Z"
+}
+```
+
+#### 2. Ottenere Tutte le Preferenze (MongoDB)
+```http
+GET http://localhost:3000/user-preferences
+```
+
+Risposta:
+```json
+[
+  {
+    "_id": "67a5f3c8e9b0d1234567890a",
+    "user_id": "1",
+    "ui_settings": {
+      "theme": "dark",
+      "language": "it",
+      "notifications_enabled": true,
+      "playback_speed": 1.0
+    },
+    "learning_preferences": {
+      "favorite_topics": ["JavaScript"],
+      "completed_courses": [],
+      "bookmarks": []
+    },
+    "accessibility": {
+      "subtitles_default": false,
+      "high_contrast": false
+    },
+    "created_at": "2025-12-27T18:00:00.000Z",
+    "updated_at": "2025-12-27T18:00:00.000Z"
+  },
+  {
+    "_id": "67a5f3c8e9b0d1234567890b",
+    "user_id": "2",
+    "ui_settings": {
+      "theme": "light",
+      "language": "en",
+      "notifications_enabled": false,
+      "playback_speed": 1.5
+    },
+    "learning_preferences": {
+      "favorite_topics": ["Python", "Docker"],
+      "completed_courses": ["3"],
+      "bookmarks": []
+    },
+    "accessibility": {
+      "subtitles_default": true,
+      "high_contrast": false
+    },
+    "created_at": "2025-12-27T19:00:00.000Z",
+    "updated_at": "2025-12-27T19:00:00.000Z"
+  }
+]
+```
+
+#### 3. Ottenere Preferenze di un Utente Specifico
+```http
+GET http://localhost:3000/user-preferences/1
+```
+
+Risposta:
+```json
+{
+  "_id": "67a5f3c8e9b0d1234567890a",
+  "user_id": "1",
+  "ui_settings": {
+    "theme": "dark",
+    "language": "it",
+    "notifications_enabled": true,
+    "playback_speed": 1.0
+  },
+  "learning_preferences": {
+    "favorite_topics": ["JavaScript"],
+    "completed_courses": [],
+    "bookmarks": []
+  },
+  "accessibility": {
+    "subtitles_default": false,
+    "high_contrast": false
+  },
+  "created_at": "2025-12-27T18:00:00.000Z",
+  "updated_at": "2025-12-27T18:00:00.000Z"
+}
+```
+
+#### 4. Aggiungere un Bookmark (MongoDB $push)
+```http
+POST http://localhost:3000/user-preferences/1/bookmarks
+Content-Type: application/json
+
+{
+  "course_id": "1",
+  "lesson_id": "3"
+}
+```
+
+Risposta:
+```json
+{
+  "_id": "67a5f3c8e9b0d1234567890a",
+  "user_id": "1",
+  "ui_settings": { ... },
+  "learning_preferences": {
+    "favorite_topics": ["JavaScript"],
+    "completed_courses": [],
+    "bookmarks": [
+      {
+        "course_id": "1",
+        "lesson_id": "3",
+        "timestamp": "2025-12-27T18:30:00.000Z"
+      }
+    ]
+  },
+  "accessibility": { ... },
+  "created_at": "2025-12-27T18:00:00.000Z",
+  "updated_at": "2025-12-27T18:30:00.000Z"
+}
+```
+
+#### 5. Rimuovere un Bookmark (MongoDB $pull)
+```http
+DELETE http://localhost:3000/user-preferences/1/bookmarks/1/3
+```
+
+Risposta:
+```json
+{
+  "_id": "67a5f3c8e9b0d1234567890a",
+  "user_id": "1",
+  "ui_settings": { ... },
+  "learning_preferences": {
+    "favorite_topics": ["JavaScript"],
+    "completed_courses": [],
+    "bookmarks": []
+  },
+  "accessibility": { ... },
+  "created_at": "2025-12-27T18:00:00.000Z",
+  "updated_at": "2025-12-27T18:35:00.000Z"
+}
+```
+
+#### 6. Aggiungere un Topic Preferito (MongoDB $addToSet - no duplicati)
+```http
+POST http://localhost:3000/user-preferences/1/favorite-topics
+Content-Type: application/json
+
+{
+  "topic": "TypeScript"
+}
+```
+
+Risposta:
+```json
+{
+  "_id": "67a5f3c8e9b0d1234567890a",
+  "user_id": "1",
+  "ui_settings": { ... },
+  "learning_preferences": {
+    "favorite_topics": ["JavaScript", "TypeScript"],
+    "completed_courses": [],
+    "bookmarks": []
+  },
+  "accessibility": { ... },
+  "created_at": "2025-12-27T18:00:00.000Z",
+  "updated_at": "2025-12-27T18:40:00.000Z"
+}
+```
+
+#### 7. Rimuovere un Topic Preferito (MongoDB $pull)
+```http
+DELETE http://localhost:3000/user-preferences/1/favorite-topics/JavaScript
+```
+
+Risposta:
+```json
+{
+  "_id": "67a5f3c8e9b0d1234567890a",
+  "user_id": "1",
+  "ui_settings": { ... },
+  "learning_preferences": {
+    "favorite_topics": ["TypeScript"],
+    "completed_courses": [],
+    "bookmarks": []
+  },
+  "accessibility": { ... },
+  "created_at": "2025-12-27T18:00:00.000Z",
+  "updated_at": "2025-12-27T18:45:00.000Z"
+}
+```
+
+#### 8. Marcare un Corso come Completato (MongoDB $addToSet)
+```http
+POST http://localhost:3000/user-preferences/1/completed-courses
+Content-Type: application/json
+
+{
+  "course_id": "1"
+}
+```
+
+Risposta:
+```json
+{
+  "_id": "67a5f3c8e9b0d1234567890a",
+  "user_id": "1",
+  "ui_settings": { ... },
+  "learning_preferences": {
+    "favorite_topics": ["TypeScript"],
+    "completed_courses": ["1"],
+    "bookmarks": []
+  },
+  "accessibility": { ... },
+  "created_at": "2025-12-27T18:00:00.000Z",
+  "updated_at": "2025-12-27T18:50:00.000Z"
+}
+```
+
+#### 9. Rimuovere un Corso Completato (MongoDB $pull)
+```http
+DELETE http://localhost:3000/user-preferences/1/completed-courses/1
+```
+
+Risposta:
+```json
+{
+  "_id": "67a5f3c8e9b0d1234567890a",
+  "user_id": "1",
+  "ui_settings": { ... },
+  "learning_preferences": {
+    "favorite_topics": ["TypeScript"],
+    "completed_courses": [],
+    "bookmarks": []
+  },
+  "accessibility": { ... },
+  "created_at": "2025-12-27T18:00:00.000Z",
+  "updated_at": "2025-12-27T18:55:00.000Z"
+}
+```
+
+#### 10. Aggiornare UI Settings (PATCH parziale)
+```http
+PATCH http://localhost:3000/user-preferences/1/ui-settings
+Content-Type: application/json
+
+{
+  "theme": "light",
+  "playback_speed": 1.5
+}
+```
+
+Risposta:
+```json
+{
+  "_id": "67a5f3c8e9b0d1234567890a",
+  "user_id": "1",
+  "ui_settings": {
+    "theme": "light",
+    "language": "it",
+    "notifications_enabled": true,
+    "playback_speed": 1.5
+  },
+  "learning_preferences": { ... },
+  "accessibility": { ... },
+  "created_at": "2025-12-27T18:00:00.000Z",
+  "updated_at": "2025-12-27T19:00:00.000Z"
+}
+```
+
+#### 11. Aggiornare Accessibility Settings (PATCH parziale)
+```http
+PATCH http://localhost:3000/user-preferences/1/accessibility
+Content-Type: application/json
+
+{
+  "subtitles_default": true,
+  "high_contrast": true
+}
+```
+
+Risposta:
+```json
+{
+  "_id": "67a5f3c8e9b0d1234567890a",
+  "user_id": "1",
+  "ui_settings": { ... },
+  "learning_preferences": { ... },
+  "accessibility": {
+    "subtitles_default": true,
+    "high_contrast": true
+  },
+  "created_at": "2025-12-27T18:00:00.000Z",
+  "updated_at": "2025-12-27T19:05:00.000Z"
+}
+```
+
+#### 12. Aggiornare Preferenze Complete (PUT)
+```http
+PUT http://localhost:3000/user-preferences/1
+Content-Type: application/json
+
+{
+  "ui_settings": {
+    "theme": "dark",
+    "language": "en",
+    "notifications_enabled": false,
+    "playback_speed": 2.0
+  },
+  "learning_preferences": {
+    "favorite_topics": ["NestJS", "MongoDB"],
+    "completed_courses": ["1", "2"],
+    "bookmarks": []
+  },
+  "accessibility": {
+    "subtitles_default": false,
+    "high_contrast": false
+  }
+}
+```
+
+Risposta:
+```json
+{
+  "_id": "67a5f3c8e9b0d1234567890a",
+  "user_id": "1",
+  "ui_settings": {
+    "theme": "dark",
+    "language": "en",
+    "notifications_enabled": false,
+    "playback_speed": 2.0
+  },
+  "learning_preferences": {
+    "favorite_topics": ["NestJS", "MongoDB"],
+    "completed_courses": ["1", "2"],
+    "bookmarks": []
+  },
+  "accessibility": {
+    "subtitles_default": false,
+    "high_contrast": false
+  },
+  "created_at": "2025-12-27T18:00:00.000Z",
+  "updated_at": "2025-12-27T19:10:00.000Z"
+}
+```
+
+#### 13. Eliminare Preferenze di un Utente (DELETE)
+```http
+DELETE http://localhost:3000/user-preferences/1
+```
+
+Risposta: **`204 No Content`** (nessun body nella risposta)
+
+> **Nota**: Eliminare le preferenze MongoDB non elimina l'utente MySQL, solo i suoi dati di preferenza.
+
+### Validazioni e Controlli (MongoDB)
+
+**Validazioni implementate:**
+- ✅ Campo `user_id` è **UNIQUE** nella collection MongoDB
+- ✅ Prevenzione duplicati: impossibile creare due documenti per lo stesso user_id
+- ✅ Validazione temi: solo "light" o "dark"
+- ✅ Validazione lingue: "it", "en", "fr", "es"
+- ✅ Validazione playback_speed: solo 0.5, 1.0, 1.5, 2.0
+- ✅ Operazioni atomiche per array (bookmark, topics, completed courses)
+- ✅ Timestamps automatici con `created_at` e `updated_at`
+
+**Errori gestiti:**
+- ❌ Tentativo di creare preferenze duplicate → HTTP 409 Conflict
+- ❌ User ID non trovato → HTTP 404 Not Found
+- ❌ Valori invalidi (theme, language, speed) → HTTP 400 Bad Request
+- ❌ Formato bookmark/topic invalido → HTTP 400 Bad Request
+
+### Operazioni MongoDB Atomiche
+
+**$push** - Aggiunge elemento ad array:
+```javascript
+// Aggiungi bookmark con timestamp automatico
+db.preferences_user.updateOne(
+  { user_id: "1" },
+  { $push: { "learning_preferences.bookmarks": { course_id: "1", lesson_id: "3", timestamp: new Date() } } }
+)
+```
+
+**$pull** - Rimuove elemento da array:
+```javascript
+// Rimuovi bookmark specifico
+db.preferences_user.updateOne(
+  { user_id: "1" },
+  { $pull: { "learning_preferences.bookmarks": { course_id: "1", lesson_id: "3" } } }
+)
+```
+
+**$addToSet** - Aggiunge solo se non esiste (previene duplicati):
+```javascript
+// Aggiungi topic solo se non già presente
+db.preferences_user.updateOne(
+  { user_id: "1" },
+  { $addToSet: { "learning_preferences.favorite_topics": "TypeScript" } }
+)
+```
+
+### Collegamento MySQL ↔ MongoDB
+
+**Come funziona il linking:**
+1. L'utente viene creato in **MySQL** (`POST /users`) → ottieni `id: 1`
+2. Le preferenze vengono create in **MongoDB** (`POST /user-preferences`) con `user_id: "1"`
+3. Il campo `user_id` (string) in MongoDB fa riferimento a `users.id` (integer) in MySQL
+4. Non c'è foreign key (database diversi), ma il collegamento è logico tramite `user_id`
+
+**Workflow completo:**
+```http
+# 1. Crea utente in MySQL
+POST http://localhost:3000/users
+{ "email": "test@example.com", "username": "test", "password": "password" }
+# Risposta: { "id": 1, ... }
+
+# 2. Crea preferenze in MongoDB
+POST http://localhost:3000/user-preferences
+{ "user_id": "1", "ui_settings": {...}, ... }
+# Risposta: { "_id": "...", "user_id": "1", ... }
+
+# 3. Recupera preferenze
+GET http://localhost:3000/user-preferences/1
+```
+
+### Endpoints User Preferences (MongoDB)
+
+- `POST /user-preferences` - Crea preferenze (verifica unicità user_id)
+- `GET /user-preferences` - Lista tutte le preferenze
+- `GET /user-preferences/:userId` - Preferenze specifiche per user_id
+- `PUT /user-preferences/:userId` - Aggiorna preferenze complete
+- `DELETE /user-preferences/:userId` - Elimina preferenze
+
+**Gestione Bookmarks:**
+- `POST /user-preferences/:userId/bookmarks` - Aggiungi bookmark ($push)
+- `DELETE /user-preferences/:userId/bookmarks/:courseId/:lessonId` - Rimuovi bookmark ($pull)
+
+**Gestione Favorite Topics:**
+- `POST /user-preferences/:userId/favorite-topics` - Aggiungi topic ($addToSet)
+- `DELETE /user-preferences/:userId/favorite-topics/:topic` - Rimuovi topic ($pull)
+
+**Gestione Completed Courses:**
+- `POST /user-preferences/:userId/completed-courses` - Marca corso completato ($addToSet)
+- `DELETE /user-preferences/:userId/completed-courses/:courseId` - Rimuovi corso completato ($pull)
+
+**Aggiornamenti Parziali:**
+- `PATCH /user-preferences/:userId/ui-settings` - Aggiorna solo UI settings
+- `PATCH /user-preferences/:userId/accessibility` - Aggiorna solo accessibility
+
+---
+
 ## Tipi di Lezione
 
 ### Video
@@ -1002,6 +1677,7 @@ Risposta: **`204 No Content`** (nessun body nella risposta)
 
 ### Courses
 - `POST /courses` - Crea corso
+- `POST /courses/with-lessons` - ⭐ Crea corso con lezioni in un'unica transazione (CONSIGLIATO)
 - `GET /courses` - Lista tutti i corsi (con enrollments e lessons)
 - `GET /courses/:id` - Dettaglio corso (con enrollments e lessons)
 - `PATCH /courses/:id` - Aggiorna corso
@@ -1024,6 +1700,21 @@ Risposta: **`204 No Content`** (nessun body nella risposta)
 - `GET /enrollments/:id` - Dettaglio iscrizione
 - `PATCH /enrollments/:id` - Aggiorna iscrizione (status, grade)
 - `DELETE /enrollments/:id` - Elimina iscrizione
+
+### User Preferences (MongoDB)
+- `POST /user-preferences` - Crea preferenze utente (MongoDB)
+- `GET /user-preferences` - Lista tutte le preferenze (MongoDB)
+- `GET /user-preferences/:userId` - Preferenze specifiche utente (MongoDB)
+- `PUT /user-preferences/:userId` - Aggiorna preferenze complete (MongoDB)
+- `DELETE /user-preferences/:userId` - Elimina preferenze (MongoDB)
+- `POST /user-preferences/:userId/bookmarks` - Aggiungi bookmark (MongoDB $push)
+- `DELETE /user-preferences/:userId/bookmarks/:courseId/:lessonId` - Rimuovi bookmark (MongoDB $pull)
+- `POST /user-preferences/:userId/favorite-topics` - Aggiungi topic preferito (MongoDB $addToSet)
+- `DELETE /user-preferences/:userId/favorite-topics/:topic` - Rimuovi topic preferito (MongoDB $pull)
+- `POST /user-preferences/:userId/completed-courses` - Marca corso completato (MongoDB $addToSet)
+- `DELETE /user-preferences/:userId/completed-courses/:courseId` - Rimuovi corso completato (MongoDB $pull)
+- `PATCH /user-preferences/:userId/ui-settings` - Aggiorna UI settings (MongoDB)
+- `PATCH /user-preferences/:userId/accessibility` - Aggiorna accessibility (MongoDB)
 
 ---
 
@@ -1162,9 +1853,10 @@ Risposta: **`204 No Content`** (nessun body nella risposta)
 
 ## 🔗 Link Utili
 
-- **File di test**: [relazioni-examples.http](relazioni-examples.http) - Contiene tutti gli esempi HTTP testabili con REST Client
+- **File di test MySQL**: [relazioni-examples.http](relazioni-examples.http) - Contiene tutti gli esempi HTTP testabili con REST Client per MySQL
+- **File di test MongoDB**: [user-preferences-examples.http](user-preferences-examples.http) - Contiene tutti gli esempi HTTP testabili per User Preferences MongoDB
 - **README principale**: [README.md](README.md) - Documentazione completa del progetto
-- **Docker Compose**: Configurazione database MySQL già pronta
+- **Docker Compose**: Configurazione database MySQL + MongoDB già pronta
 
 ---
 

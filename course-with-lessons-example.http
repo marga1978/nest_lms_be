@@ -1,0 +1,51 @@
+### Crea Corso con Lezioni (POST /courses/with-lessons)
+POST http://localhost:3000/courses/with-lessons
+Content-Type: application/json
+
+{
+  "course": {
+    "name": "Vue.js Masterclass",
+    "description": "Corso completo su Vue.js 3 con Composition API",
+    "code": "VUE301",
+    "credits": 8,
+    "maxStudents": 25,
+    "isActive": true
+  },
+  "lessons": [
+    {
+      "title": "Introduzione a Vue.js",
+      "description": "Panoramica su Vue.js e setup dell'ambiente",
+      "type": "video",
+      "videoUrl": "https://example.com/vue-intro.mp4",
+      "orderIndex": 1,
+      "durationMinutes": 30
+    },
+    {
+      "title": "Reactive Data con Vue 3",
+      "description": "Approfondimento su ref, reactive e computed",
+      "type": "video",
+      "videoUrl": "https://example.com/vue-reactive.mp4",
+      "orderIndex": 2,
+      "durationMinutes": 45
+    },
+    {
+      "title": "Vue Router",
+      "description": "Navigazione e routing in Vue.js",
+      "type": "video",
+      "videoUrl": "https://example.com/vue-router.mp4",
+      "orderIndex": 3,
+      "durationMinutes": 40
+    },
+    {
+      "title": "Quiz: Concetti Base Vue",
+      "description": "Verifica le tue conoscenze su Vue.js",
+      "type": "quiz",
+      "content": "{\"questions\": [{\"id\": 1, \"text\": \"Cos'è ref?\"}]}",
+      "orderIndex": 4,
+      "durationMinutes": 15
+    }
+  ]
+}
+
+### Ottieni il Corso Creato (GET /courses/:id)
+GET http://localhost:3000/courses/1

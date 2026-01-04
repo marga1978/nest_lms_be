@@ -56,6 +56,31 @@ export class EnrollmentsController {
     return this.enrollmentsService.findAll();
   }
 
+  @Get('groupinguser')
+  @ApiOperation({
+    summary: 'Ottieni tutte le iscrizioni raggruppate per utente',
+    description: `Restituisce una vista aggregata delle iscrizioni, raggruppando i corsi per ogni utente.
+
+    Ogni elemento della risposta contiene:
+    - Informazioni dell'utente (id, username, email)
+    - Array di corsi a cui l'utente è iscritto (con dettagli completi del corso)
+
+    Utile per:
+    - Dashboard studenti con tutti i loro corsi
+    - Report delle iscrizioni per utente
+    - Visualizzazioni aggregate`
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista degli utenti con i loro corsi raggruppati',
+    schema: { example: SwaggerExamples.enrollments.findByUsers }
+  })
+  findByUsers() {
+    return this.enrollmentsService.findByUsers();
+  }
+
+  
+
   @Get('user/:userId')
   @ApiOperation({
     summary: 'Ottieni tutte le iscrizioni di un utente',

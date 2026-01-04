@@ -317,6 +317,43 @@ export const SwaggerExamples = {
       grade: 95.5,
       createdAt: '2026-01-02T10:00:00.000Z',
       updatedAt: '2026-01-02T12:00:00.000Z'
-    }
+    },
+    findByUsers: [
+      {
+        users_id: 1,
+        users_username: 'mariorossi',
+        users_email: 'mario.rossi@example.com',
+        corsi: [
+          {
+            name: 'JavaScript Avanzato',
+            description: 'Corso completo di JavaScript ES6+',
+            code: 'JS301',
+            maxStudents: 30,
+            isActive: true
+          },
+          {
+            name: 'TypeScript Fundamentals',
+            description: 'Introduzione a TypeScript',
+            code: 'TS101',
+            maxStudents: 25,
+            isActive: true
+          }
+        ]
+      },
+      {
+        users_id: 2,
+        users_username: 'annabianchi',
+        users_email: 'anna.bianchi@example.com',
+        corsi: [
+          {
+            name: 'React Advanced',
+            description: 'Concetti avanzati di React',
+            code: 'REACT301',
+            maxStudents: 20,
+            isActive: true
+          }
+        ]
+      }
+    ]
   }
 };

@@ -1,6 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { UserProfile } from './user-profile.entity';
 import { Enrollment } from './enrollment.entity';
+import { UserRole } from './user-role.entity';
+import { CourseUserRole } from './course-user-role.entity';
 
 /**
  * ════════════════════════════════════════════════════════════════
@@ -47,4 +49,12 @@ export class User {
   // Relazione 1:N con Enrollments (ex Student)
   @OneToMany(() => Enrollment, enrollment => enrollment.user)
   enrollments: Enrollment[];
+
+  // Relazione 1:N con UserRole (ruoli dell'utente)
+  @OneToMany(() => UserRole, userRole => userRole.user)
+  userRoles: UserRole[];
+
+  // Relazione 1:N con CourseUserRole (ruoli per corso)
+  @OneToMany(() => CourseUserRole, courseUserRole => courseUserRole.user)
+  courseUserRoles: CourseUserRole[];
 }

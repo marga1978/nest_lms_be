@@ -5,6 +5,8 @@ import { Enrollment, EnrollmentStatus } from '../../entities/enrollment.entity';
 import { User } from '../../entities/user.entity';
 import { Course } from '../../entities/course.entity';
 import { CreateEnrollmentDto, UpdateEnrollmentDto } from '../../dto/enrollment.dto';
+import { UserWithCoursesDto } from '../../dto/user-with-courses.dto';
+
 
 @Injectable()
 export class EnrollmentsService {
@@ -119,6 +121,44 @@ export class EnrollmentsService {
     return await this.enrollmentsRepository.find({
       relations: ['user', 'course'],
     });
+  }
+
+  async findByUsers(): Promise<UserWithCoursesDto[]> {
+    const rawResults = await this.enrollmentsRepository
+    .createQueryBuilder('enrollments')
+    .select([
+      'users.id',
+      'users.username',
+      'users.email',
+    ])
+    .addSelect(
+      `JSON_ARRAYAGG(
+        JSON_OBJECT(
+          'name', courses.name,
+          'description', courses.description,
+          'code', courses.code,
+          'maxStudents', courses.maxStudents,
+          'isActive', courses.isActive
+        )
+      )`,
+      'courses'
+    )
+    .innerJoin('enrollments.user', 'users')  // Assumendo che hai una relazione 'user' in Enrollment
+    .innerJoin('enrollments.course', 'courses')  // Assumendo che hai una relazione 'course' in Enrollment
+    .groupBy('users.id')
+    .addGroupBy('users.username')
+    .addGroupBy('users.email')
+    .getRawMany();
+
+    //console.log("rawResults:", rawResults); 
+    // Opzionale: trasforma i risultati
+    return rawResults.map(row => ({
+      id: row.users_id,
+      username: row.users_username,
+      email: row.users_email,
+      //corsi: JSON.parse(row.corsi || '[]')  // Parse del JSON se necessario
+      courses:row.courses || '[]'
+    }));
   }
 
   async findOne(id: number): Promise<Enrollment> {

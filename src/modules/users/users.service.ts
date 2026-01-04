@@ -17,9 +17,13 @@ export class UsersService {
   }
 
   async findAll(): Promise<User[]> {
-    return await this.usersRepository.find({
-      relations: ['profile'],
-    });
+    // return await this.usersRepository
+    //   .createQueryBuilder('user')
+    //   .leftJoinAndSelect('user.profile', 'profile')
+    //   .getMany();
+     return await this.usersRepository.find({
+       relations: ['profile'],
+     });
   }
 
   async findOne(id: number): Promise<User> {

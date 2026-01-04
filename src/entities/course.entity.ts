@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Enrollment } from './enrollment.entity';
 import { CourseLesson } from './course-lesson.entity';
+import { CourseUserRole } from './course-user-role.entity';
 
 @Entity('courses')
 export class Course {
@@ -36,4 +37,7 @@ export class Course {
 
   @OneToMany(() => CourseLesson, lesson => lesson.course)
   lessons: CourseLesson[];
+
+  @OneToMany(() => CourseUserRole, courseUserRole => courseUserRole.course)
+  courseUserRoles: CourseUserRole[];
 }

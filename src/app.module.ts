@@ -8,11 +8,16 @@ import { UsersModule } from './modules/users/users.module';
 import { UserProfilesModule } from './modules/user-profiles/user-profiles.module';
 import { CourseLessonsModule } from './modules/course-lessons/course-lessons.module';
 import { UserPreferencesModule } from './modules/user-preferences/user-preferences.module';
+import { AuthModule } from './modules/auth.module';
 import { Course } from './entities/course.entity';
 import { Enrollment } from './entities/enrollment.entity';
 import { User } from './entities/user.entity';
 import { UserProfile } from './entities/user-profile.entity';
 import { CourseLesson } from './entities/course-lesson.entity';
+import { Role } from './entities/role.entity';
+import { Permission } from './entities/permission.entity';
+import { UserRole } from './entities/user-role.entity';
+import { CourseUserRole } from './entities/course-user-role.entity';
 
 @Module({
   imports: [
@@ -28,7 +33,7 @@ import { CourseLesson } from './entities/course-lesson.entity';
       username: process.env.DB_USERNAME || 'root',
       password: process.env.DB_PASSWORD || 'password',
       database: process.env.DB_DATABASE || 'students_courses_db',
-      entities: [User, Course, Enrollment, UserProfile, CourseLesson],
+      entities: [User, Course, Enrollment, UserProfile, CourseLesson, Role, Permission, UserRole, CourseUserRole],
       synchronize: true, // In produzione usa migrations!
       logging: true,
     }),
@@ -41,6 +46,7 @@ import { CourseLesson } from './entities/course-lesson.entity';
     UserProfilesModule,
     CourseLessonsModule,
     UserPreferencesModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

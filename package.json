@@ -6,7 +6,8 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main",
-    "build": "nest build"
+    "build": "nest build",
+    "seed": "ts-node src/seeds/run-seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

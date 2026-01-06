@@ -8,16 +8,16 @@ import { UsersModule } from './modules/users/users.module';
 import { UserProfilesModule } from './modules/user-profiles/user-profiles.module';
 import { CourseLessonsModule } from './modules/course-lessons/course-lessons.module';
 import { UserPreferencesModule } from './modules/user-preferences/user-preferences.module';
-import { AuthModule } from './modules/auth.module';
-import { Course } from './entities/course.entity';
-import { Enrollment } from './entities/enrollment.entity';
-import { User } from './entities/user.entity';
-import { UserProfile } from './entities/user-profile.entity';
-import { CourseLesson } from './entities/course-lesson.entity';
-import { Role } from './entities/role.entity';
-import { Permission } from './entities/permission.entity';
-import { UserRole } from './entities/user-role.entity';
-import { CourseUserRole } from './entities/course-user-role.entity';
+import { AuthModule } from './modules/auth/auth.module';
+import { Course } from './modules/courses/entities/course.entity';
+import { Enrollment } from './modules/enrollments/entities/enrollment.entity';
+import { User } from './modules/users/entities/user.entity';
+import { UserProfile } from './modules/user-profiles/entities/user-profile.entity';
+import { CourseLesson } from './modules/course-lessons/entities/course-lesson.entity';
+import { Role } from './modules/auth/entities/role.entity';
+import { Permission } from './modules/auth/entities/permission.entity';
+import { UserRole } from './modules/auth/entities/user-role.entity';
+import { CourseUserRole } from './modules/auth/entities/course-user-role.entity';
 
 @Module({
   imports: [

@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Course } from './course.entity';
+import { Course } from '../../courses/entities/course.entity';
 
 export enum LessonType {
   VIDEO = 'video',

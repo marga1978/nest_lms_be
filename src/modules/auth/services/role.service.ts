@@ -5,8 +5,8 @@ import { Role } from '../entities/role.entity';
 import { Permission } from '../entities/permission.entity';
 import { UserRole } from '../entities/user-role.entity';
 import { CourseUserRole } from '../entities/course-user-role.entity';
-import { User } from '../entities/user.entity';
-import { Course } from '../entities/course.entity';
+import { User } from '../../users/entities/user.entity';
+import { Course } from '../../courses/entities/course.entity';
 import { CreateRoleDto, UpdateRoleDto, AssignRoleToUserDto, AssignCourseRoleDto } from '../dto/role.dto';
 
 @Injectable()

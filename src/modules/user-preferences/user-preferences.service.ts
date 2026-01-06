@@ -1,14 +1,14 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { UserPreferences, UserPreferencesDocument } from '../../schemas/user-preferences.schema';
+import { UserPreferences, UserPreferencesDocument } from './schemas/user-preferences.schema';
 import {
   CreateUserPreferencesDto,
   UpdateUserPreferencesDto,
   AddBookmarkDto,
   AddFavoriteTopicDto,
   MarkCourseCompletedDto,
-} from '../../dto/user-preferences.dto';
+} from './dto/user-preferences.dto';
 
 @Injectable()
 export class UserPreferencesService {

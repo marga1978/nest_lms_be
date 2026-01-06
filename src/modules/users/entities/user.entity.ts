@@ -1,8 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { UserProfile } from './user-profile.entity';
-import { Enrollment } from './enrollment.entity';
-import { UserRole } from './user-role.entity';
-import { CourseUserRole } from './course-user-role.entity';
+import { UserProfile } from '../../user-profiles/entities/user-profile.entity';
+import { Enrollment } from '../../enrollments/entities/enrollment.entity';
+import { UserRole } from '../../auth/entities/user-role.entity';
+import { CourseUserRole } from '../../auth/entities/course-user-role.entity';
 
 /**
  * ════════════════════════════════════════════════════════════════

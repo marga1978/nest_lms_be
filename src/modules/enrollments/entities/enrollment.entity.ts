@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, ManyToOne, Column, CreateDateColumn, UpdateDateColumn, JoinColumn } from 'typeorm';
-import { User } from './user.entity';
-import { Course } from './course.entity';
+import { User } from '../../users/entities/user.entity';
+import { Course } from '../../courses/entities/course.entity';
 
 export enum EnrollmentStatus {
   PENDING = 'pending',

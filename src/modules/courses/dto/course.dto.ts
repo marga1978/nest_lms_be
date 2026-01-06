@@ -1,7 +1,7 @@
 import { IsString, IsInt, IsBoolean, IsOptional, Min, ValidateNested, IsArray, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { LessonType } from '../entities/course-lesson.entity';
+import { LessonType } from '../../course-lessons/entities/course-lesson.entity';
 
 export class CreateCourseDto {
   @ApiProperty({ example: 'JavaScript Avanzato', description: 'Nome del corso' })

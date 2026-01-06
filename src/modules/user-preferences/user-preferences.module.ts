@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserPreferencesController } from './user-preferences.controller';
 import { UserPreferencesService } from './user-preferences.service';
-import { UserPreferences, UserPreferencesSchema } from '../../schemas/user-preferences.schema';
+import { UserPreferences, UserPreferencesSchema } from './schemas/user-preferences.schema';
 
 @Module({
   imports: [

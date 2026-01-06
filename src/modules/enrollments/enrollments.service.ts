@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { Enrollment, EnrollmentStatus } from '../../entities/enrollment.entity';
-import { User } from '../../entities/user.entity';
-import { Course } from '../../entities/course.entity';
-import { CreateEnrollmentDto, UpdateEnrollmentDto } from '../../dto/enrollment.dto';
-import { UserWithCoursesDto } from '../../dto/user-with-courses.dto';
+import { Enrollment, EnrollmentStatus } from './entities/enrollment.entity';
+import { User } from '../users/entities/user.entity';
+import { Course } from '../courses/entities/course.entity';
+import { CreateEnrollmentDto, UpdateEnrollmentDto } from './dto/enrollment.dto';
+import { UserWithCoursesDto } from '../users/dto/user-with-courses.dto';
 
 
 @Injectable()

@@ -1,22 +1,24 @@
 import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, Column, CreateDateColumn } from 'typeorm';
-import { User } from './user.entity';
+import { Course } from '../../courses/entities/course.entity';
+import { User } from '../../users/entities/user.entity';
 import { Role } from './role.entity';
 
 /**
  * ════════════════════════════════════════════════════════════════
- * ENTITY: UserRole - Associazione utenti-ruoli (Many-to-Many)
+ * ENTITY: CourseUserRole - Ruoli specifici per corso
  * ════════════════════════════════════════════════════════════════
  *
- * Tabella di associazione che permette:
- * - Un utente può avere più ruoli
- * - Un ruolo può essere assegnato a più utenti
- * - Tracciamento di chi ha assegnato il ruolo
- * - Possibilità di ruoli temporanei con scadenza
+ * Permette di assegnare ruoli specifici per un corso:
+ * - Un utente può essere "teacher" in un corso e "student" in un altro
+ * - Gestione granulare dei permessi a livello di corso
  */
-@Entity('user_roles')
-export class UserRole {
+@Entity('course_user_roles')
+export class CourseUserRole {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column()
+  courseId: number;
 
   @Column()
   userId: number;
@@ -27,24 +29,18 @@ export class UserRole {
   @CreateDateColumn()
   assignedAt: Date;
 
-  @Column({ nullable: true })
-  assignedBy: number; // ID dell'utente che ha assegnato il ruolo
-
-  @Column({ type: 'timestamp', nullable: true })
-  expiresAt: Date; // Ruolo temporaneo
+  // Relazione Many-to-One con Course
+  @ManyToOne(() => Course, course => course.courseUserRoles)
+  @JoinColumn({ name: 'courseId' })
+  course: Course;
 
   // Relazione Many-to-One con User
-  @ManyToOne(() => User, user => user.userRoles)
+  @ManyToOne(() => User, user => user.courseUserRoles)
   @JoinColumn({ name: 'userId' })
   user: User;
 
   // Relazione Many-to-One con Role
-  @ManyToOne(() => Role, role => role.userRoles)
+  @ManyToOne(() => Role, role => role.courseUserRoles)
   @JoinColumn({ name: 'roleId' })
   role: Role;
-
-  // Relazione Many-to-One con User (chi ha assegnato)
-  @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'assignedBy' })
-  assigner: User;
 }

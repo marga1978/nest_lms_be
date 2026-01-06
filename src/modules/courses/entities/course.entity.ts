@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Enrollment } from './enrollment.entity';
-import { CourseLesson } from './course-lesson.entity';
-import { CourseUserRole } from './course-user-role.entity';
+import { Enrollment } from '../../enrollments/entities/enrollment.entity';
+import { CourseLesson } from '../../course-lessons/entities/course-lesson.entity';
+import { CourseUserRole } from '../../auth/entities/course-user-role.entity';
 
 @Entity('courses')
 export class Course {

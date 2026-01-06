@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserProfile } from '../../entities/user-profile.entity';
-import { User } from '../../entities/user.entity';
-import { CreateUserProfileDto, UpdateUserProfileDto } from '../../dto/user-profile.dto';
+import { UserProfile } from './entities/user-profile.entity';
+import { User } from '../users/entities/user.entity';
+import { CreateUserProfileDto, UpdateUserProfileDto } from './dto/user-profile.dto';
 
 @Injectable()
 export class UserProfilesService {

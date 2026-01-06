@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { EnrollmentsService } from './enrollments.service';
-import { CreateEnrollmentDto, UpdateEnrollmentDto } from '../../dto/enrollment.dto';
+import { CreateEnrollmentDto, UpdateEnrollmentDto } from './dto/enrollment.dto';
 import { SwaggerExamples } from '../../swagger-examples';
 
 @ApiTags('enrollments')

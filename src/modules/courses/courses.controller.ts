@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { CoursesService } from './courses.service';
-import { CreateCourseDto, UpdateCourseDto, CreateCourseWithLessonsDto } from '../../dto/course.dto';
+import { CreateCourseDto, UpdateCourseDto, CreateCourseWithLessonsDto } from './dto/course.dto';
 
 @ApiTags('courses')
 @Controller('courses')

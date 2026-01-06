@@ -17,7 +17,7 @@ import {
   AddBookmarkDto,
   AddFavoriteTopicDto,
   MarkCourseCompletedDto,
-} from '../../dto/user-preferences.dto';
+} from './dto/user-preferences.dto';
 
 @Controller('user-preferences')
 export class UserPreferencesController {
